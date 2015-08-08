@@ -1,0 +1,35 @@
+table#game {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+}
+
+table#game td {
+    width: 5vw;
+    height: 5vw;
+    border: 1px solid black;
+}
+
+.first-point {
+
+}
+
+.first-alive-comm {
+    background-color: #FF0000;
+}
+
+.first-dead-comm {
+    background-color: #FF0000;
+}
+
+.second-point {
+
+}
+
+.second-alive-comm {
+    background-color: #FF0000;
+}
+
+.second-dead-comm {
+    background-color: #FF0000;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{{ static_url("css/style.css") }}">
+    </head>
+    <body>
+        <table id="game">
+            <tbody>
+                {% for i in range(BOARD_SIZE) %}
+                <tr>
+                    {% for j in range(BOARD_SIZE) %}
+                    <td></td>
+                    {% end %}
+                </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </body>
+</html>

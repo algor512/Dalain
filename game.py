@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+from config import *
 from enum import Enum
 from queue import Queue
 
-BOARD_SIZE = 5
 NEIGHBOURS = [(x, y) for x in range(-1, 2) \
                      for y in range(-1, 2) if not (y == 0 and x == 0)]
 CELLS = [(x, y) for x in range(1, BOARD_SIZE+1) for y in range(1, BOARD_SIZE+1)]

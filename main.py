@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import logging
+import os
 import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
+import tornado.template
 import game
+from config import *
 
 waiting_rooms = {}
 games = {}
+loader = tornado.template.Loader("template")
 
 class GameServer:
     def __init__(conn1, conn2, room):
@@ -37,7 +41,7 @@ class GameServer:
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self, name):
-        self.write("Hello, {}".format(name))
+        self.render("base.html", BOARD_SIZE=BOARD_SIZE)
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, room):
@@ -65,10 +69,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         if self.close_reason != "Game ended":
             self.game.on_close(self.player)
 
+settings = {
+    "static_path": os.path.join(os.path.dirname(__file__), "static"),
+    "template_path": os.path.join(os.path.dirname(__file__), "template")
+}
+
 application = tornado.web.Application([
-    (r"/([0-1a-z]+)", MainHandler),
-    (r"/sock/([0-1a-z]+)", MainHandler)
-])
+        (r"/([0-1a-z]+)", MainHandler),
+        (r"/sock/([0-1a-z]+)", MainHandler),
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": settings["static_path"]})
+    ], **settings)
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()
