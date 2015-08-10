@@ -1,0 +1,75 @@
+@first-alive: #ff0000;
+@first-dead: #990000;
+@second-alive: #0000ff;
+@second-dead: #000099;
+@ok: #abffab;
+@error: #ffabab;
+@normal: #dadada;
+@aviable: #dbdbdb;
+@aviable-hover: #8c8c8c;
+
+body {
+    text-align: center;
+}
+
+#statusline {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    width: 60vw;
+    height: 2em;
+    background-color: @normal;
+}
+
+#statusline.ok {
+    background-color: @ok;
+}
+
+#statusline.error {
+    background-color: @error;
+}
+
+#game {
+    width: 80vh;
+    height: 80vh;
+}
+
+.aviable {
+    rect { fill: @aviable !important; }
+    rect:hover { fill: @aviable-hover !important; cursor: pointer; }
+}
+
+.empty {
+    circle { visibility: hidden; }
+    rect { fill: none; }
+}
+
+.fpoint {
+    circle { fill: @first-alive; }
+    rect { fill: none; }
+}
+
+.spoint {
+    circle { fill: @second-alive; }
+    rect { fill: none; }
+}
+
+.facomm {
+    circle { visibility: hidden; }
+    rect { fill: @first-alive; }
+}
+
+.sacomm {
+    circle { visibility: hidden; }
+    rect { fill: @second-alive; }
+}
+
+.fdcomm {
+    circle { visibility: hidden; }
+    rect { fill: @first-dead; }
+}
+
+.sdcomm {
+    circle { visibility: hidden; }
+    rect { fill: @second-dead; }
+}

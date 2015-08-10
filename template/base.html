@@ -4,18 +4,27 @@
         <title></title>
         <meta charset="utf-8">
         <link rel="stylesheet" href="{{ static_url("css/style.css") }}">
+        <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script defer src="{{ static_url("js/game.js") }}"></script>
     </head>
     <body>
-        <table id="game">
-            <tbody>
-                {% for i in range(BOARD_SIZE) %}
-                <tr>
-                    {% for j in range(BOARD_SIZE) %}
-                    <td></td>
-                    {% end %}
-                </tr>
+        <svg id="game">
+            {% for i in range(BOARD_SIZE) %}
+                {% for j in range(BOARD_SIZE) %}
+                <g id="{{i}}-{{j}}" class="empty">
+                <rect x="{{(100/BOARD_SIZE) * j}}%"
+                      y="{{(100/BOARD_SIZE) * i}}%"
+                      width="{{100/BOARD_SIZE}}%"
+                      height="{{100/BOARD_SIZE}}%"
+                      stroke="black" stroke-width="1" />
+                <circle cx="{{(100/BOARD_SIZE) * (j+0.5)}}%"
+                        cy="{{(100/BOARD_SIZE) * (i+0.5)}}%"
+                        r="{{10/BOARD_SIZE}}%"
+                        stroke="none" />
+                </g>
                 {% end %}
-            </tbody>
-        </table>
+            {% end %}
+        </svg>
+        <div id="statusline"></div>
     </body>
 </html>

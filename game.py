@@ -23,10 +23,9 @@ class Game:
         self.moves_left = 2
         self.captures = 0
 
-    def make_move(move):
-        if move not in self.get_allowed_moves(self.captures < 2):
+    def make_move(self, x, y):
+        if (x, y) not in self.get_allowed_moves():
             return False
-        mx, my = move
         if self.turn == 0:
             if self.field[x][y] == SellState.empty:
                 self.field[x][y] = SellState.firstPoint
@@ -80,8 +79,23 @@ class Game:
                             self.field[n_x][n_y] = SellState.secondAliveComm
                             q.put((n_x, n_y))
 
-    def get_allowed_moves(self, allow_capture):
+    def get_field(self):
+        tfield = []
+        for i in range(1, BOARD_SIZE+1):
+            tfield.append([i.value for i in self.field[i][1:BOARD_SIZE+1]])
+        return tfield
+
+    def get_allowed_moves(self):
+        allow_capture = bool(self.captures < 2)
         allowed_moves = set()
+
+        if self.turn == 0 and self.field[1][1] == SellState.empty:
+            allowed_moves.add((1, 1))
+            return list(allowed_moves)
+        elif self.turn == 1 and self.field[BOARD_SIZE][BOARD_SIZE] == SellState.empty:
+            allowed_moves.add((BOARD_SIZE, BOARD_SIZE))
+            return list(allowed_moves)
+
         for x, y in CELLS:
             if self.field[x][y] in FIRST_ALIVES and self.turn == 0:
                 for sh_x, sh_y in NEIGHBOURS:
@@ -99,7 +113,17 @@ class Game:
                     if self.field[n_x][n_y] == SellState.empty or (allow_capture \
                                  and self.field[n_x][n_y] == SellState.firstPoint):
                         allowed_moves.add((n_x, n_y))
-        return allowed_moves
+        return list(allowed_moves)
+
+    def get_points(self):
+        points = [0, 0]
+        for line in self.field:
+            for cell in line:
+                if cell in FIRST_ALIVES:
+                    points[0] += 1
+                elif cell in SECOND_ALIVES:
+                    points[1] += 1
+        return points
 
     def __str__(self):
         return ("\n".join([" ".join(str(i.value) \

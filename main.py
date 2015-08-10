@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import logging
 import os
+import json
+import weakref
 import tornado.ioloop
 import tornado.options
 import tornado.web
@@ -14,7 +16,7 @@ games = {}
 loader = tornado.template.Loader("template")
 
 class GameServer:
-    def __init__(conn1, conn2, room):
+    def __init__(self, conn1, conn2, room):
         self.players = [weakref.ref(conn1), weakref.ref(conn2)]
         self.game = game.Game()
         self.room = room
@@ -23,21 +25,53 @@ class GameServer:
                      conn1.request.remote_ip, id(conn1)))
         logging.info("Room {}: second player ip {}, id {}".format(room, \
                      conn2.request.remote_ip, id(conn2)))
-        message = json.dumps({"type": "command", "data": "run"})
-        conn1.write_message(message)
-        conn2.write_message(message)
+        m1 = json.dumps({"type": "start", "player": 1})
+        m2 = json.dumps({"type": "start", "player": 2})
+        conn1.write_message(m1)
+        conn2.write_message(m2)
+        m_state = json.dumps({"type": "state", "board": self.game.get_field(), \
+                              "aviable": self.game.get_allowed_moves()})
+        conn1.write_message(m_state)
 
     def on_message(self, message, player):
         m = json.loads(message)
         try:
-            if m["type"] == "answer":
+            if m["type"] == "ok":
                 pass
-                # Обрабатываем, отправляем одному opponents_turn, другому your_turn
+            elif m["type"] == "move":
+                closeConnection = False
+                if player != self.game.turn:
+                    logging.info("Room {}: move from wrong player".format(room))
+                res = self.game.make_move(int(m["move"][0]), int(m["move"][1]))
+                mes = [{"type": "state", "board": self.game.get_field()}, \
+                       {"type": "state", "board": self.game.get_field()}]
+                mes[self.game.turn]["aviable"] = self.game.get_allowed_moves()
+                mes[(self.game.turn+1)%2]["aviable"] = []
+                if len(mes[self.game.turn]["aviable"]) == 0:
+                    results = self.game.get_points()
+                    mes = [{"type": "end", "points": results}, \
+                           {"type": "end", "points": results}]
+                    if results[0] > results[1]:
+                        mes[0]["result"] = "win"
+                        mes[1]["result"] = "lose"
+                    elif results[1] > results[0]:
+                        mes[0]["result"] = "lose"
+                        mes[1]["result"] = "win"
+                    else:
+                        mes[0]["result"] = mes[1]["result"] = "draw"
+                    closeConnection = True
+                self.players[0]().write_message(mes[0])
+                self.players[1]().write_message(mes[1])
+                if closeConnection:
+                    self.players[0]().close(reason = "Game ended")
+                    self.players[1]().close(reason = "Game ended")
         except:
             pass
 
-    def on_close(self, player):
-        pass # FIXME
+    def on_close(self, player, code, reason):
+        logging.info("Room {}, player {} close connection (code {}, reason {})".format(self.room,
+                     player, code, reason))
+        # FIXME: error message
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self, name):
@@ -55,7 +89,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.player = 1
             del waiting_rooms[room]
         else:
-            self.write_message(json.dumps({"type": "command", "data": "wait"}))
+            self.write_message(json.dumps({"type": "wait"}))
             waiting_rooms[room] = self
 
     def on_message(self, message):
@@ -63,11 +97,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.game.on_message(message, self.player)
         else:
             logging.warning("{}, {}: there are messages, but game isn't running".format(self.request.remote_ip, self.room))
-            self.write_message(json.dumps({"type": "command", "data": "wait"}))
+            self.write_message(json.dumps({"type": "wait"}))
 
     def on_close(self):
         if self.close_reason != "Game ended":
-            self.game.on_close(self.player)
+            self.game.on_close(self.player, self.close_code, self.close_reason)
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
@@ -76,7 +110,7 @@ settings = {
 
 application = tornado.web.Application([
         (r"/([0-1a-z]+)", MainHandler),
-        (r"/sock/([0-1a-z]+)", MainHandler),
+        (r"/sock/([0-1a-z]+)", WebSocketHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": settings["static_path"]})
     ], **settings)
 
