@@ -116,14 +116,40 @@ class Game:
         return list(allowed_moves)
 
     def get_points(self):
+        self.update_field()
+        for x, y in CELLS:
+            if self.field[x][y] in FIRST_ALIVES:
+                if self.field[x][y] == SellState.firstPoint:
+                    self.field[x][y] = SellState.firstAliveComm
+                q = Queue()
+                q.put((x, y))
+                while not q.empty():
+                    cur_x, cur_y = q.get()
+                    for sh_x, sh_y in NEIGHBOURS:
+                        n_x, n_y = cur_x + sh_x, cur_y + sh_y
+                        if self.field[n_x][n_y] == SellState.empty:
+                            self.field[n_x][n_y] = SellState.firstAliveComm
+                            q.put((n_x, n_y))
+            if self.field[x][y] in SECOND_ALIVES:
+                if self.field[x][y] == SellState.secondPoint:
+                    self.field[x][y] = SellState.secondAliveComm
+                q = Queue()
+                q.put((x, y))
+                while not q.empty():
+                    cur_x, cur_y = q.get()
+                    for sh_x, sh_y in NEIGHBOURS:
+                        n_x, n_y = cur_x + sh_x, cur_y + sh_y
+                        if self.field[n_x][n_y] == SellState.empty:
+                            self.field[n_x][n_y] = SellState.secondAliveComm
+                            q.put((n_x, n_y))
+
         points = [0, 0]
-        for line in self.field:
-            for cell in line:
-                if cell in FIRST_ALIVES:
-                    points[0] += 1
-                elif cell in SECOND_ALIVES:
-                    points[1] += 1
-        return points
+        for x, y in CELLS:
+            if self.field[x][y] == SellState.firstAliveComm:
+                points[0] += 1
+            elif self.field[x][y] == SellState.secondAliveComm:
+                points[1] += 1
+        return points, self.get_field()
 
     def __str__(self):
         return ("\n".join([" ".join(str(i.value) \

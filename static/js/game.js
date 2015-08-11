@@ -11,7 +11,6 @@ for (var i = 0; i < BOARD_SIZE; ++i) {
 }
 update_field();
 
-var state = "Connecting";
 var player;
 var sock = new WebSocket("ws://" + window.location.host + "/sock/" + ROOM_NAME);
 sock.onopen = function() {
@@ -26,29 +25,49 @@ sock.onmessage = function(event) {
         case "wait":
             break;
         case "start":
-            player = message["player"]
+            player = message["player"];
             $("div#statusline").attr("class", "ok")
                                .html("Игра началась");
             break;
         case "state":
             for (var i = 0; i < BOARD_SIZE; ++i)
                 for (var j = 0; j < BOARD_SIZE; ++j)
-                    field[i][j] = message["board"][i][j]
-            aviable_turns = message["aviable"]
-            update_field()
+                    field[i][j] = message["board"][i][j];
+            if (player < 2) {
+                aviable_turns = message["aviable"]
+                if (aviable_turns.length > 0) {
+                    $("div#statusline").html("<b>Ваш ход</b>");
+                } else {
+                    $("div#statusline").html("Ход противника");
+                }
+            }
+            update_field();
             break;
         case "end":
-            var text = "Конец игры: ";
-            if (message["result"] == "win")
-                text += "вы выиграли ";
-            else if (message["result"] == "lose")
-                text += "вы проиграли ";
-            else
-                text += "вы сыграли в ничью ";
-            text += ("со счётом " + message["points"][0] + ":" + message["points"][1]);
+            for (var i = 0; i < BOARD_SIZE; ++i)
+                for (var j = 0; j < BOARD_SIZE; ++j)
+                    field[i][j] = message["board"][i][j];
+            aviable_turns = []
+            update_field();
+            var text = "Конец игры. ";
+            if (player < 2) {
+                if (message["result"] == "win")
+                    text += "Вы выиграли. ";
+                else if (message["result"] == "lose")
+                    text += "Вы проиграли. ";
+                else
+                    text += "Вы сыграли в ничью. ";
+            }
+            text += ("Cчёт " + message["points"][0] + ":" + message["points"][1]);
             $("div#statusline").attr("class", "ok")
                                .html(text);
-            sock.close()
+            sock.close();
+            break;
+        case "connection_error":
+            var text = "Игрок " + message["player"] + " оборвал соединение"
+            $("div#statusline").attr("class", "error")
+                               .html(text);
+            sock.close();
             break;
     }
 }
@@ -58,11 +77,11 @@ function update_field() {
         for (var j = 0; j < BOARD_SIZE; ++j) {
             var g_id = "g#" + i + "-" + j;
             var cur_cell = $(g_id);
-            cur_cell.off("click")
+            cur_cell.off("click");
             var classes = "";
             for (var k in aviable_turns) {
                 if (aviable_turns[k][0] == i+1 && aviable_turns[k][1] == j+1) {
-                    cur_cell.click(make_move)
+                    cur_cell.click(make_move);
                     classes += "aviable ";
                     break;
                 }
@@ -96,7 +115,7 @@ function update_field() {
 }
 
 function make_move(event) {
-    var coords = event.delegateTarget.id.split("-")
+    var coords = event.delegateTarget.id.split("-");
     var m = JSON.stringify({ type: "move", move: [(+coords[0])+1, (+coords[1])+1] });
     sock.send(m);
 }

@@ -5,8 +5,10 @@ body {
   margin-left: auto;
   margin-right: auto;
   margin-top: 20px;
+  vertical-align: middle;
   width: 60vw;
   height: 2em;
+  line-height: 2em;
   background-color: #dadada;
 }
 #statusline.ok {
