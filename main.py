@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import lesscss
 import os
 import json
 import weakref
@@ -140,13 +141,15 @@ settings = {
 }
 
 application = tornado.web.Application([
-        (r"/([0-1a-z]+)", MainHandler),
-        (r"/sock/([0-1a-z]+)", WebSocketHandler),
+        (r"/([0-9a-z]+)", MainHandler),
+        (r"/sock/([0-9a-z]+)", WebSocketHandler),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": settings["static_path"]})
     ], **settings)
 
 if __name__ == "__main__":
+    lesscss.LessCSS(media_dir="static", based=False)     
+
     tornado.options.parse_command_line()
     logging.info("Starting up")
-    application.listen(8888)
+    application.listen(PORT)
     tornado.ioloop.IOLoop.current().start()
