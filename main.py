@@ -128,6 +128,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.write_message(json.dumps({"type": "wait"}))
 
     def on_close(self):
+        if self.room in waiting_rooms:
+            del waiting_rooms[self.room]
+            return
         if not hasattr(self, "close_reason") or self.close_reason != "Game ended":
             self.game.on_close(self.player)
 
